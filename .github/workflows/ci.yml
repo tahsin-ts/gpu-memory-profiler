@@ -1,0 +1,22 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "${{ matrix.python }}"}
+      - run: pip install . pytest
+      - run: pytest -q -rs
+      - run: make demo
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t gpumem:ci .
+      - run: docker run --rm gpumem:ci estimate --model llama3-8b --mode infer --batch 8 --seq 8192
+      - run: docker run --rm gpumem:ci watch --count 1 || test $? -eq 2    # no GPU on the runner: clean exit code 2

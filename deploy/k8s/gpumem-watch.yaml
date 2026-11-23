@@ -1,0 +1,29 @@
+# Runs `gpumem watch` on every GPU node: per-GPU and per-process memory, including processes
+# PyTorch cannot see. Logs go to stdout for your log pipeline.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: gpumem-watch
+  labels: {app: gpumem-watch}
+spec:
+  selector:
+    matchLabels: {app: gpumem-watch}
+  template:
+    metadata:
+      labels: {app: gpumem-watch}
+    spec:
+      runtimeClassName: nvidia                       # from the NVIDIA GPU Operator / container toolkit
+      nodeSelector: {nvidia.com/gpu.present: "true"}
+      tolerations:
+      - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
+      hostPID: true                                  # so process ids match the node's processes
+      containers:
+      - name: watch
+        image: ghcr.io/tahsin-ts/gpumem:1.0.0        # build and push your own: make docker
+        args: ["watch", "--interval", "30"]
+        resources:
+          requests: {cpu: 10m, memory: 32Mi}
+          limits: {memory: 64Mi}                     # no nvidia.com/gpu request: it observes, it does not use a GPU
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true

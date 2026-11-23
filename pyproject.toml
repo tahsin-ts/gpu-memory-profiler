@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpumem"
+version = "1.0.0"
+description = "Predict, simulate and explain GPU memory for PyTorch workloads"
+requires-python = ">=3.10"
+dependencies = []
+optional-dependencies = { torch = ["torch"], test = ["pytest"] }
+
+[project.scripts]
+gpumem = "gpumem.cli:main"
+
+[tool.setuptools]
+packages = ["gpumem"]
